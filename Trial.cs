@@ -6,12 +6,9 @@ using System.Net.Sockets;
 
 public class Trial : MonoBehaviour
 {
-    private Touch touch;
-    private float Rotatespeed = 0.25f;
-    private Quaternion rotationX;
-    private Quaternion rotationY;
-    private Quaternion newrotationX;
-    private Quaternion newrotationY;
+    float initialFingerDistance;
+    Vector3 initialScale;
+
     private static int localPort;
     private string IP;
     public int port;
@@ -45,29 +42,31 @@ public class Trial : MonoBehaviour
         client = new UdpClient();
     }
 
+
     private void Update()
     {
-        if (Input.touchCount > 0)
-        {
-            touch = Input.GetTouch(0);
-            if (touch.phase == TouchPhase.Moved)
+        if (Input.touches.Length == 2)
             {
-                rotationX = Quaternion.Euler(-touch.deltaPosition.y * Rotatespeed, 0f, 0f);
-                newrotationX = transform.rotation = rotationX * transform.rotation;
+                Touch t1 = Input.touches[0];
+                Touch t2 = Input.touches[1];
 
-                rotationY = Quaternion.Euler(0f, -touch.deltaPosition.x * Rotatespeed, 0f);
-                newrotationY = transform.rotation = rotationY * transform.rotation;
-
-                if (newrotationY != rotationY || newrotationX != rotationX)
+                if (t1.phase == TouchPhase.Began || t2.phase == TouchPhase.Began)
                 {
-                    string pos = Cube.transform.rotation.ToString();
-                    string name = "r";
+                    initialFingerDistance = Vector2.Distance(t1.position, t2.position);
+                    initialScale = Cube.transform.localScale;
+                }
+                else if (t1.phase == TouchPhase.Moved || t2.phase == TouchPhase.Moved)
+                {
+                    var currentFingerDistance = Vector2.Distance(t1.position, t2.position);
+                    var scaleFactor = currentFingerDistance / initialFingerDistance;
+                    Cube.transform.localScale = initialScale * scaleFactor;
+                }
+                    string pos = Cube.transform.localScale.ToString();
+                    string name = "z";
                     pos = pos + name;
                     byte[] data = Encoding.UTF8.GetBytes(pos);
                     client.Send(data, data.Length, remoteEndPoint);
-                }
-            }
+                    
         }
     }
 }
-   
