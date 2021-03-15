@@ -7,21 +7,21 @@ using System.Net.Sockets;
 public class Trial : MonoBehaviour
 {
     private Touch touch;
-    private float Rotatespeed = 0.25f;
-    private Quaternion rotationX;
-    private Quaternion rotationY;
-    private Quaternion newrotationX;
-    private Quaternion newrotationY;
+    private float speedModifier;
     private static int localPort;
     private string IP;
     public int port;
     IPEndPoint remoteEndPoint;
     UdpClient client;
+    private Vector3 lastposition;
+    private Vector3 newposition;
     public GameObject Cube;
+
 
     void Start()
     {
-        transform.position = new Vector3(0, 0, 0);
+        speedModifier = 0.001f;
+        lastposition = transform.position = new Vector3(0, 0, 4.15f);
         init();
 
     }
@@ -52,22 +52,19 @@ public class Trial : MonoBehaviour
             touch = Input.GetTouch(0);
             if (touch.phase == TouchPhase.Moved)
             {
-                rotationX = Quaternion.Euler(-touch.deltaPosition.y * Rotatespeed, 0f, 0f);
-                newrotationX = transform.rotation = rotationX * transform.rotation;
-
-                rotationY = Quaternion.Euler(0f, -touch.deltaPosition.x * Rotatespeed, 0f);
-                newrotationY = transform.rotation = rotationY * transform.rotation;
-
-                if (newrotationY != rotationY || newrotationX != rotationX)
+                
+                newposition = transform.position = new Vector3(transform.position.x + touch.deltaPosition.x * speedModifier, transform.position.y + touch.deltaPosition.y * speedModifier, transform.position.z + touch.deltaPosition.y * speedModifier);
+               
+                if (lastposition != newposition)
                 {
-                    string pos = Cube.transform.rotation.ToString();
-                    string name = "r";
+                    string pos = newposition.ToString();
+                    string name = "m";
                     pos = pos + name;
                     byte[] data = Encoding.UTF8.GetBytes(pos);
                     client.Send(data, data.Length, remoteEndPoint);
+                     
                 }
             }
         }
     }
 }
-   
